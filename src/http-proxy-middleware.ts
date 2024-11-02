@@ -39,6 +39,13 @@ export class HttpProxyMiddleware<TReq, TRes> {
         this.handleUpgrade(req, socket, head);
       }
     };
+
+    // Add logic to inject appSession cookies in the onProxyReq event handler
+    this.proxy.on('proxyReq', (proxyReq, req, res) => {
+      if (req.headers['appsession']) {
+        proxyReq.setHeader('cookie', `appSession=${req.headers['appsession']}`);
+      }
+    });
   }
 
   // https://github.com/Microsoft/TypeScript/wiki/'this'-in-TypeScript#red-flags-for-this
@@ -146,6 +153,14 @@ export class HttpProxyMiddleware<TReq, TRes> {
     // 2. option.pathRewrite
     await this.applyRouter(req, newProxyOptions);
     await this.applyPathRewrite(req, this.pathRewriter);
+
+    // Update the prepareProxyRequest method to include appSession cookies
+    if (req.headers['appsession']) {
+      newProxyOptions.headers = {
+        ...newProxyOptions.headers,
+        cookie: `appSession=${req.headers['appsession']}`,
+      };
+    }
 
     return newProxyOptions;
   };
