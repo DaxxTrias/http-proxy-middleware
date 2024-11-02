@@ -62,4 +62,26 @@ describe('express error middleware', () => {
 
     expect(response.headers['set-cookie']).toBeUndefined();
   });
+
+  it('should verify handling of appSession cookies in headers', async () => {
+    const proxyMiddleware = createProxyMiddleware({
+      target: 'http://httpbin.org',
+      changeOrigin: true,
+      on: {
+        proxyReq: (proxyReq, req, res) => {
+          if (req.headers['appsession']) {
+            proxyReq.setHeader('cookie', `appSession=${req.headers['appsession']}`);
+          }
+        },
+      },
+    });
+
+    const app = createApp(proxyMiddleware);
+    const response = await request(app)
+      .get('/cookies')
+      .set('appsession', 'test-session')
+      .expect(200);
+
+    expect(response.headers['set-cookie']).toContain('appSession=test-session');
+  });
 });

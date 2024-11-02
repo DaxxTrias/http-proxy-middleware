@@ -137,4 +137,16 @@ export interface Options<TReq = http.IncomingMessage, TRes = http.ServerResponse
    * @since v3.0.0
    */
   logger?: Logger | any;
+  /**
+   * Headers to be added to the request
+   * @example
+   * ```js
+   * createProxyMiddleware({
+   *   headers: {
+   *     'X-Custom-Header': 'value'
+   *   }
+   * });
+   * ```
+   */
+  headers?: { [header: string]: string };
 }

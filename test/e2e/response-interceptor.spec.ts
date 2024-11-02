@@ -138,5 +138,14 @@ describe('responseInterceptor()', () => {
 
       expect(response.headers['set-cookie']).toBeUndefined();
     });
+
+    it('should verify handling of appSession cookies in responses', async () => {
+      const response = await agent
+        .get(`/cookies`)
+        .set('appsession', 'test-session')
+        .expect(200);
+
+      expect(response.headers['set-cookie']).toContain('appSession=test-session');
+    });
   });
 });
