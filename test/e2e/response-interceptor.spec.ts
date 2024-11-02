@@ -102,4 +102,41 @@ describe('responseInterceptor()', () => {
       expect(response.body.deflated).toBe(true);
     });
   });
+
+  describe('handle appSession cookies in responses', () => {
+    beforeEach(() => {
+      agent = request(
+        createApp(
+          createProxyMiddleware({
+            target: `http://httpbin.org`,
+            changeOrigin: true,
+            selfHandleResponse: true,
+            on: {
+              proxyRes: responseInterceptor(async (responseBuffer, proxyRes, req, res) => {
+                if (req.headers['appsession']) {
+                  res.setHeader('set-cookie', `appSession=${req.headers['appsession']}`);
+                }
+                return responseBuffer;
+              }),
+            },
+          }),
+        ),
+      );
+    });
+
+    it('should set appSession cookie in response when appsession header is present', async () => {
+      const response = await agent
+        .get(`/cookies`)
+        .set('appsession', 'test-session')
+        .expect(200);
+
+      expect(response.headers['set-cookie']).toContain('appSession=test-session');
+    });
+
+    it('should not set appSession cookie in response when appsession header is missing', async () => {
+      const response = await agent.get(`/cookies`).expect(200);
+
+      expect(response.headers['set-cookie']).toBeUndefined();
+    });
+  });
 });

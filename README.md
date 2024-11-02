@@ -73,6 +73,7 @@ _All_ `http-proxy` [options](https://github.com/nodejitsu/node-http-proxy#option
   - [External WebSocket upgrade](#external-websocket-upgrade)
 - [Intercept and manipulate requests](#intercept-and-manipulate-requests)
 - [Intercept and manipulate responses](#intercept-and-manipulate-responses)
+- [Inject appSession cookies](#inject-appsession-cookies)
 - [Node.js 17+: ECONNREFUSED issue with IPv6 and localhost (#705)](#nodejs-17-econnrefused-issue-with-ipv6-and-localhost-705)
 - [Debugging](#debugging)
 - [Working examples](#working-examples)
@@ -550,6 +551,30 @@ const proxy = createProxyMiddleware({
 ```
 
 Check out [interception recipes](https://github.com/chimurai/http-proxy-middleware/blob/master/recipes/response-interceptor.md#readme) for more examples.
+
+## Inject appSession cookies
+
+To inject appSession cookies into requests, you can use the `onProxyReq` event handler in `createProxyMiddleware`. This can be useful for scenarios where you need to manage sessions for puppetteering or other automated tasks.
+
+Example:
+
+```javascript
+const { createProxyMiddleware } = require('http-proxy-middleware');
+
+const proxy = createProxyMiddleware({
+  target: 'http://www.example.org',
+  changeOrigin: true,
+  on: {
+    proxyReq: (proxyReq, req, res) => {
+      if (req.headers['appsession']) {
+        proxyReq.setHeader('cookie', `appSession=${req.headers['appsession']}`);
+      }
+    },
+  },
+});
+```
+
+In this example, the `onProxyReq` event handler checks if the `appsession` header is present in the incoming request. If it is, the handler sets the `cookie` header in the proxy request to include the `appSession` cookie.
 
 ## Node.js 17+: ECONNREFUSED issue with IPv6 and localhost ([#705](https://github.com/chimurai/http-proxy-middleware/issues/705))
 
